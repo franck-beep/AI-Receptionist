@@ -777,7 +777,7 @@ def vapi_webhook():
             return jsonify({'success': False, 'error': 'No business_id provided'}), 400
 
         # Load config
-        config_file = f'configs/{business_id}.json'
+        config_file = f'config/{business_id}.json'
         if not os.path.exists(config_file):
             return jsonify({'success': False, 'error': f'Config not found for {business_id}'}), 404
 
