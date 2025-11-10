@@ -902,8 +902,8 @@ def get_orders(business_id: str):
     conn.close()
     return jsonify(orders)
 
-@app.route("/webhook/vapi", methods=["POST"])
-def vapi_webhook():
+@app.route("/webhook/vapi/test", methods=["POST"])
+def testconnection_webhook():
     data = request.get_json(force=True)
     print("Incoming Vapi payload:", data)
     return jsonify({"message": "Received"})
