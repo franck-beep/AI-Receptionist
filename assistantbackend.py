@@ -899,7 +899,7 @@ def health_check():
 def get_business_config(business_id: str):
     """Get business config"""
     try:
-        config = BusinessConfig(f'configs/{business_id}.json')
+        config = BusinessConfig(f'config/{business_id}.json')
         return jsonify(config.config)
     except Exception as e:
         return jsonify({'error': str(e)}), 404
