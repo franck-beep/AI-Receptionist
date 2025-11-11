@@ -3,6 +3,8 @@ AI Receptionist Universal Backend
 Now with appointment conflict detection and all features integrated
 
 10/8 Update - Now handles scenarios outside business hours
+
+10/11 Twilio Implementation, Ai Assistant will now send text message upon schedule confirmation
 """
 
 from flask import Flask, request, jsonify
@@ -10,7 +12,9 @@ from datetime import datetime, timedelta
 from typing import Dict, List, Optional, Tuple
 import json
 import os
+from twilio.rest import Client
 import sqlite3
+
 
 app = Flask(__name__)
 
@@ -564,8 +568,60 @@ Service: {data['service']}
 Time: {formatted_time}
 Notes: {data.get('notes', 'None')}"""
 
+
         print(f"📧 Notification: {message}")
         # TODO: Implement email/SMS
+
+# ============================================
+# CANCELLATION PLUGIN
+# ============================================
+
+class CancellationPlugin(Plugin):
+    def can_handle(self, intent: str) -> bool:
+        return intent in ['cancellation', 'cancel']
+
+    def process(self, data: Dict) -> Dict:
+        """Delete an appointment from the database based on customer details."""
+        name = data.get("customer_name")
+        phone = data.get("phone")
+        date = data.get("date")
+        time = data.get("time")
+
+        if not all([name, phone, date, time]):
+            return {
+                "success": False,
+                "message": "Missing details. Please provide name, phone, date, and time."
+            }
+
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+
+        cursor.execute("""
+                       SELECT id
+                       FROM appointments
+                       WHERE customer_name = ?
+                         AND phone = ?
+                         AND date = ?
+                         AND time = ?
+                       """, (name, phone, date, time))
+        row = cursor.fetchone()
+
+        if not row:
+            conn.close()
+            return {"success": False, "message": "No matching appointment found."}
+
+        appointment_id = row[0]
+        cursor.execute("DELETE FROM appointments WHERE id = ?", (appointment_id,))
+        conn.commit()
+        conn.close()
+
+        print(f"🗑️ Deleted appointment for {name} on {date} at {time}")
+
+        return {
+            "success": True,
+            "message": f"Your appointment on {date} at {time} has been deleted."
+        }
+
 
 
 # ============================================
@@ -746,6 +802,9 @@ class PluginManager:
         if 'messages' in enabled_features:
             plugins.append(MessagePlugin(self.config))
 
+        if 'cancellations' in enabled_features:
+            plugins.append(CancellationPlugin(self.config))
+
         return plugins
 
     def route_request(self, intent: str, data: Dict) -> Dict:
@@ -840,7 +899,7 @@ def health_check():
 def get_business_config(business_id: str):
     """Get business config"""
     try:
-        config = BusinessConfig(f'config/{business_id}.json')
+        config = BusinessConfig(f'configs/{business_id}.json')
         return jsonify(config.config)
     except Exception as e:
         return jsonify({'error': str(e)}), 404
@@ -907,6 +966,7 @@ def testconnection_webhook():
     data = request.get_json(force=True)
     print("Incoming Vapi payload:", data)
     return jsonify({"message": "Received"})
+
 
 
 if __name__ == '__main__':

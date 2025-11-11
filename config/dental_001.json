@@ -2,7 +2,7 @@
   "business_id": "dental_001",
   "business_name": "Smile Team Philly",
   "business_type": "medical",
-  "enabled_features": ["appointments", "faq", "messages"],
+  "enabled_features": ["appointments", "faq", "messages", "cancellations"],
   
   "business_hours": {
     "monday": "08:00-17:00",
@@ -86,6 +86,11 @@
       "take_messages_when": "outside_hours_or_busy"
     }
   },
+   
+    "cancellations": {
+      "enabled": true,
+      "take_messages_when": "outside_hours_or_busy"
+    }
   
   "integrations": {
     "calendar_integration": "google",
