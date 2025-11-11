@@ -1,6 +1,6 @@
 {
   "business_id": "dental_001",
-  "business_name": "Downtown Dental Care",
+  "business_name": "Smile Team Philly",
   "business_type": "medical",
   "enabled_features": ["appointments", "faq", "messages"],
   
@@ -102,7 +102,7 @@
   
   "ai_settings": {
     "voice": "professional_female",
-    "greeting": "Thank you for calling Downtown Dental Care. How may I assist you today?",
+    "greeting": "Thank you for calling Smile Team Philly. How may I assist you today?",
     "tone": "professional and warm",
     "compliance_notes": "HIPAA compliant - do not discuss medical details over phone"
   }
