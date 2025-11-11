@@ -90,7 +90,7 @@
     "cancellations": {
       "enabled": true,
       "take_messages_when": "outside_hours_or_busy"
-    }
+    },
   
   "integrations": {
     "calendar_integration": "google",

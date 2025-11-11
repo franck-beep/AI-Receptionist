@@ -12,7 +12,7 @@ from datetime import datetime, timedelta
 from typing import Dict, List, Optional, Tuple
 import json
 import os
-from twilio.rest import Client
+#from twilio.rest import Client
 import sqlite3
 
 
@@ -577,33 +577,38 @@ Notes: {data.get('notes', 'None')}"""
 # ============================================
 
 class CancellationPlugin(Plugin):
+    def __init__(self, config):
+        self.config = config
+        self.db_path = os.path.join(os.getcwd(), "appointments.db")
+        os.makedirs(os.path.dirname(self.db_path), exist_ok=True)
+
     def can_handle(self, intent: str) -> bool:
         return intent in ['cancellation', 'cancel']
 
     def process(self, data: Dict) -> Dict:
-        """Delete an appointment from the database based on customer details."""
+        """Delete an appointment from the database by name, phone, and start_time"""
         name = data.get("customer_name")
         phone = data.get("phone")
-        date = data.get("date")
-        time = data.get("time")
+        start_time = data.get("start_time")
 
-        if not all([name, phone, date, time]):
+        if not all([name, phone]):
             return {
                 "success": False,
-                "message": "Missing details. Please provide name, phone, date, and time."
+                "message": "Missing details. Provide name and phone."
             }
 
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
+
+        # Check if appointment exists
+        print(f"🔍 Looking for: {name}, {phone}")
 
         cursor.execute("""
                        SELECT id
                        FROM appointments
                        WHERE customer_name = ?
                          AND phone = ?
-                         AND date = ?
-                         AND time = ?
-                       """, (name, phone, date, time))
+                       """, (name, phone))
         row = cursor.fetchone()
 
         if not row:
@@ -611,17 +616,18 @@ class CancellationPlugin(Plugin):
             return {"success": False, "message": "No matching appointment found."}
 
         appointment_id = row[0]
+
+        # Delete appointment
         cursor.execute("DELETE FROM appointments WHERE id = ?", (appointment_id,))
         conn.commit()
         conn.close()
 
-        print(f"🗑️ Deleted appointment for {name} on {date} at {time}")
+        print(f"🗑️ Deleted appointment for {name} at {start_time}")
 
         return {
             "success": True,
-            "message": f"Your appointment on {date} at {time} has been deleted."
+            "message": f"Your appointment at {start_time} has been canceled successfully."
         }
-
 
 
 # ============================================
